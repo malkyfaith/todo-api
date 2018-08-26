@@ -16,7 +16,9 @@ const mock_Todos = [{
   "text": "mock text 1"
 }, {
   _id: new ObjectID(),
-  "text": "mock text 2"
+  "text": "mock text 2",
+  completed: true,
+  completedAt: 333
 }]
 beforeEach((done) => {
   Todo.remove({}).then(() => {
@@ -101,7 +103,7 @@ describe('GET /todos/:id', () => {
   });
 });
 
-describe.only('DELETE /todos/:id', () => {
+describe('DELETE /todos/:id', () => {
   it('should delete the todo by correct id', (done) => {
     request(app)
       .delete(`/todos/${mock_Todos[0]._id.toHexString()}`)
@@ -130,6 +132,38 @@ describe.only('DELETE /todos/:id', () => {
     request(app)
       .delete(`/todos/123abc`)
       .expect(404)
+      .end(done);
+  });
+});
+
+
+describe.only('PATCH /todos/:id', () => {
+  it('should update the todo', (done) => {
+    let id = mock_Todos[0]._id.toHexString();
+    request(app)
+      .patch(`/todos/${id}`)
+      .send({
+        completed: true
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.completedAt).toBeA('number');
+      })
+      .end(done);
+  });
+  it('should clear completedAt when todo is not completed', (done) => {
+    let id = mock_Todos[0]._id.toHexString();
+    request(app)
+      .patch(`/todos/${id}`)
+      .send({
+        completed: false
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toBe(null);
+      })
       .end(done);
   });
 });
