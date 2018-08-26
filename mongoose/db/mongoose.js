@@ -1,4 +1,3 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/TodoApp');
-
+mongoose.connect(process.env.mongodb_URI);
 module.exports = {mongoose};

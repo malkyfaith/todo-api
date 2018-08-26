@@ -136,8 +136,7 @@ describe('DELETE /todos/:id', () => {
   });
 });
 
-
-describe.only('PATCH /todos/:id', () => {
+describe('PATCH /todos/:id', () => {
   it('should update the todo', (done) => {
     let id = mock_Todos[0]._id.toHexString();
     request(app)
