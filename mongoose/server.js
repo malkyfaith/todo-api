@@ -8,13 +8,14 @@ const {
   Todo
 } = require('./models/todo');
 
-const app = express()
+const app = express();
+
+const port = process.env.PORT || 3000;
 
 //middleware
 app.use(bodyParser.json());
 
 app.post('/todos', (req, res) => {
-  console.log(req.body);
   let todo = new Todo({
     text: req.body.text
   });
@@ -51,15 +52,40 @@ app.get('/todos/:id', (req, res) => {
     .then(doc => {
       if(!doc)
         return res.status(404).send();
-        res.status(200).send({todo:doc});
+      res.status(200).send({todo:doc});
     })
     .catch(e => {
       res.status(400).send();
     })
-})
+});
 
-app.listen(3001, () => {
-  console.log(`Listening at 3001`);
+// DELETE by id
+app.delete('/todos/:id', (req, res) => {
+  const id = req.params.id;
+  // check if id is valid
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  // findById
+  // success
+  // if todo - 200 and return body
+  // if not - 404 and return empty body
+  // error
+  // 400 - and return empty body back
+  Todo.findByIdAndRemove(id)
+    .then(todo => {
+      if(!todo)
+        return res.status(404).send();
+      res.status(200).send({todo});
+    })
+    .catch(e => {
+      res.status(400).send();
+    })
+});
+
+app.listen(port, () => {
+  console.log(`Listening at ${port}`);
 })
 
 

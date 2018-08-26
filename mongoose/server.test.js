@@ -1,15 +1,21 @@
 const expect = require('expect');
 const request = require('supertest');
 const {
+  ObjectID
+} = require('mongodb');
+const {
   app
 } = require('./server');
 const {
   Todo
 } = require('./models/todo');
 
+
 const mock_Todos = [{
+  _id: new ObjectID(),
   "text": "mock text 1"
 }, {
+  _id: new ObjectID(),
   "text": "mock text 2"
 }]
 beforeEach((done) => {
@@ -66,6 +72,64 @@ describe('GET /todos', () => {
       .expect(res => {
         expect(res.body.todos.length).toBe(2);
       })
+      .end(done);
+  });
+});
+
+describe('GET /todos/:id', () => {
+  it('should get todo by correct id', (done) => {
+    request(app)
+      .get(`/todos/${mock_Todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).toBe(mock_Todos[0].text);
+      })
+      .end(done);
+  });
+  it('should return 404 if todo not found', (done) => {
+    var newkey = new ObjectID().toHexString();
+    request(app)
+      .get(`/todos/${newkey}`)
+      .expect(404)
+      .end(done);
+  });
+  it('should return 404 if id structure is not valid', (done) => {
+    request(app)
+      .get(`/todos/123abc`)
+      .expect(404)
+      .end(done);
+  });
+});
+
+describe.only('DELETE /todos/:id', () => {
+  it('should delete the todo by correct id', (done) => {
+    request(app)
+      .delete(`/todos/${mock_Todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).toBe(mock_Todos[0].text);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(mock_Todos[0]._id.toHexString()).then(todo => {
+          expect(null).toNotExist();
+          done();
+        }).catch(e => done(e));
+      });
+  });
+  it('should return 404 if todo not found', (done) => {
+    var newkey = new ObjectID().toHexString();
+    request(app)
+      .delete(`/todos/${newkey}`)
+      .expect(404)
+      .end(done);
+  });
+  it('should return 404 if id structure is not valid', (done) => {
+    request(app)
+      .delete(`/todos/123abc`)
+      .expect(404)
       .end(done);
   });
 });
