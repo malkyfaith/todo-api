@@ -137,10 +137,12 @@ app.patch('/todos/:id', (req, res) => {
 
 // User apis
 app.post('/users', (req, res) => {
+  // console.log('req.body:'+ JSON.stringify(req.body))
   let body = _.pick(req.body, ['email', 'password']);
   let user = new User(body);
 
-  user.save().then(() => {
+  user.save().then((user) => {
+    // console.log('user:'+ JSON.stringify(user));
     return user.generateAuthToken();
   }).then(token => {
     res.header('x-auth', token).send(user);

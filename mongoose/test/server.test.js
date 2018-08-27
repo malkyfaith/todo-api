@@ -5,27 +5,26 @@ const {
 } = require('mongodb');
 const {
   app
-} = require('./server');
+} = require('../server');
 const {
   Todo
-} = require('./models/todo');
+} = require('../models/todo');
+const {
+  User
+} = require('../models/user');
+
+const {
+  mock_Todos,
+  populateTodos,
+  user_mock,
+  populateUsers
+} = require('./seed');
 
 
-const mock_Todos = [{
-  _id: new ObjectID(),
-  "text": "mock text 1"
-}, {
-  _id: new ObjectID(),
-  "text": "mock text 2",
-  completed: true,
-  completedAt: 333
-}]
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(mock_Todos)
-  }).then(() => done());
-});
 
+beforeEach(populateTodos);
+beforeEach(populateUsers);
+// POST /todos
 describe('POST /todos', () => {
   it('should create new todo', (done) => {
     var text = 'Test todo text';
@@ -66,6 +65,7 @@ describe('POST /todos', () => {
   });
 });
 
+// GET /todos
 describe('GET /todos', () => {
   it('should get todos', (done) => {
     request(app)
@@ -78,6 +78,7 @@ describe('GET /todos', () => {
   });
 });
 
+// GET /todos/:id
 describe('GET /todos/:id', () => {
   it('should get todo by correct id', (done) => {
     request(app)
@@ -103,6 +104,7 @@ describe('GET /todos/:id', () => {
   });
 });
 
+//DELETE /todos/:id
 describe('DELETE /todos/:id', () => {
   it('should delete the todo by correct id', (done) => {
     request(app)
@@ -136,6 +138,7 @@ describe('DELETE /todos/:id', () => {
   });
 });
 
+// PATCH /todos/:id
 describe('PATCH /todos/:id', () => {
   it('should update the todo', (done) => {
     let id = mock_Todos[0]._id.toHexString();
@@ -165,4 +168,83 @@ describe('PATCH /todos/:id', () => {
       })
       .end(done);
   });
+});
+
+//GET /users/me
+describe('GET /users/me', () => {
+  it('should return user if authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', user_mock[0].tokens[0].token)
+      .expect(200)
+      .expect(res => {
+        expect(res.body._id).toBe(user_mock[0]._id.toHexString());
+        expect(res.body.email).toBe(user_mock[0].email);
+      })
+      .end(done);
+  });
+  it('should return 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', 'asd')
+      .expect(401)
+      .end(done);
+  });
+});
+
+// POST /users
+describe('POST /users', () => {
+  it('should create a user', (done) => {
+    var email = 'example@example.com';
+    var password = '123mnb!';
+
+    request(app)
+      .post('/users')
+      .send({
+        email,
+        password
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.email).toBe(email);
+        expect(res.body._id).toExist();
+        expect(res.header['x-auth']).toExist();
+      })
+      .end(err => {
+        if (err) {
+          return done(err);
+        }
+        User.findOne({
+          email
+        }).then(doc => {
+          expect(doc).toExist();
+          expect(doc.password).toNotBe(password);
+          done();
+        })
+      });
+  });
+
+  it('should not create a user with duplicate email', (done) => {
+    request(app)
+      .post('/users')
+      .send({
+        'email': user_mock[0].email,
+        'password': user_mock[0].password
+      })
+      .expect(400)
+      .end(done);
+  });
+
+  it('should check the validation', (done) => {
+    request(app)
+      .post('/users')
+      .send({
+        'email': 'email',
+        'password': '123'
+      })
+      .expect(400)
+      .end(done);
+  });
+
+
 });
