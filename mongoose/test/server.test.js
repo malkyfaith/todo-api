@@ -81,25 +81,35 @@ describe('GET /todos', () => {
 
 // GET /todos/:id
 describe('GET /todos/:id', () => {
-  it('should get todo by correct id', (done) => {
+  it('should return todo by correct id and token', (done) => {
     request(app)
       .get(`/todos/${mock_Todos[0]._id.toHexString()}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(200)
       .expect(res => {
         expect(res.body.todo.text).toBe(mock_Todos[0].text);
       })
       .end(done);
   });
+  it('should not return todo created by other', (done) => {
+    request(app)
+      .get(`/todos/${mock_Todos[1]._id.toHexString()}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
+      .expect(404)
+      .end(done);
+  });
   it('should return 404 if todo not found', (done) => {
     var newkey = new ObjectID().toHexString();
     request(app)
       .get(`/todos/${newkey}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(404)
       .end(done);
   });
   it('should return 404 if id structure is not valid', (done) => {
     request(app)
       .get(`/todos/123abc`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(404)
       .end(done);
   });
@@ -110,6 +120,7 @@ describe('DELETE /todos/:id', () => {
   it('should delete the todo by correct id', (done) => {
     request(app)
       .delete(`/todos/${mock_Todos[0]._id.toHexString()}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(200)
       .expect(res => {
         expect(res.body.todo.text).toBe(mock_Todos[0].text);
@@ -124,16 +135,34 @@ describe('DELETE /todos/:id', () => {
         }).catch(e => done(e));
       });
   });
+  it('should not delete the todo by another creator', (done) => {
+    console.log(JSON.stringify(mock_Todos));
+    request(app)
+      .delete(`/todos/${mock_Todos[0]._id.toHexString()}`)
+      .set('x-auth', user_mock[1].tokens[0].token)
+      .expect(404)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(mock_Todos[0]._id.toHexString()).then(todo => {
+          expect(todo).toExist();
+          done();
+        }).catch(e => done(e));
+      });
+  });
   it('should return 404 if todo not found', (done) => {
     var newkey = new ObjectID().toHexString();
     request(app)
       .delete(`/todos/${newkey}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(404)
       .end(done);
   });
   it('should return 404 if id structure is not valid', (done) => {
     request(app)
       .delete(`/todos/123abc`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(404)
       .end(done);
   });
@@ -267,7 +296,7 @@ describe('POST /users/login', () => {
 
         User.findById(user_mock[1]._id).then(user => {
           expect(user.email).toBe(user_mock[1].email);
-          expect(user.tokens[0]).toInclude({
+          expect(user.tokens[1]).toInclude({
             access: 'auth',
             token: res.header['x-auth']
           });

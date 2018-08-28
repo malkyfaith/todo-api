@@ -25,7 +25,14 @@ const user_mock = [{
   {
     _id: id2,
     email: 'test2@test.com',
-    password: '2test123'
+    password: '2test123',
+    tokens: [{
+      'access': 'auth',
+      'token': jwt.sign({
+        _id: id2,
+        access: 'auth'
+      }, '123abc').toString()
+    }]
   }
 ];
 

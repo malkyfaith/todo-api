@@ -58,7 +58,7 @@ app.get('/todos', authenticate, (req, res) => {
 });
 
 // GET by id
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   const id = req.params.id;
   // check if id is valid
   if (!ObjectID.isValid(id)) {
@@ -71,7 +71,10 @@ app.get('/todos/:id', (req, res) => {
   // if not - 404 and return empty body
   // error
   // 400 - and return empty body back
-  Todo.findById(id)
+  Todo.findOne({
+      _id: id,
+      creator: req.user._id
+    })
     .then(doc => {
       if (!doc)
         return res.status(404).send();
@@ -85,7 +88,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // DELETE by id
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
   const id = req.params.id;
   // check if id is valid
   if (!ObjectID.isValid(id)) {
@@ -98,8 +101,14 @@ app.delete('/todos/:id', (req, res) => {
   // if not - 404 and return empty body
   // error
   // 400 - and return empty body back
-  Todo.findByIdAndRemove(id)
+  console.log(id);
+  console.log(req.user._id);
+  Todo.findOneAndRemove({
+      _id: id,
+      creator: req.user._id
+    })
     .then(todo => {
+      console.log('found:'+todo);
       if (!todo)
         return res.status(404).send();
       res.status(200).send({
