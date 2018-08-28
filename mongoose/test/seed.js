@@ -19,7 +19,7 @@ const user_mock = [{
       'token': jwt.sign({
         _id: id1,
         access: 'auth'
-      }, '123abc').toString()
+      }, process.env.JWT_SECRET).toString()
     }]
   },
   {
@@ -31,7 +31,7 @@ const user_mock = [{
       'token': jwt.sign({
         _id: id2,
         access: 'auth'
-      }, '123abc').toString()
+      }, process.env.JWT_SECRET).toString()
     }]
   }
 ];
