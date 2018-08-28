@@ -172,22 +172,40 @@ describe('DELETE /todos/:id', () => {
 describe('PATCH /todos/:id', () => {
   it('should update the todo', (done) => {
     let id = mock_Todos[0]._id.toHexString();
+    let text = "Updated text from UT"
     request(app)
       .patch(`/todos/${id}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .send({
-        completed: true
+        completed: true,
+        text
       })
       .expect(200)
       .expect(res => {
+        expect(res.body.todo.text).toBe(text);
         expect(res.body.todo.completed).toBe(true);
         expect(res.body.todo.completedAt).toBeA('number');
       })
+      .end(done);
+  });
+  it('should not update the todo created by other', (done) => {
+    let id = mock_Todos[0]._id.toHexString();
+    let text = "Updated text from UT"
+    request(app)
+      .patch(`/todos/${id}`)
+      .set('x-auth', user_mock[1].tokens[0].token)
+      .send({
+        completed: true,
+        text
+      })
+      .expect(404)
       .end(done);
   });
   it('should clear completedAt when todo is not completed', (done) => {
     let id = mock_Todos[0]._id.toHexString();
     request(app)
       .patch(`/todos/${id}`)
+      .set('x-auth', user_mock[0].tokens[0].token)
       .send({
         completed: false
       })

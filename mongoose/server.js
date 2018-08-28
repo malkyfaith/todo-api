@@ -68,7 +68,7 @@ app.get('/todos/:id', authenticate, (req, res) => {
   // findById
   // success
   // if todo - 200 and return body
-  // if not - 404 and return empty body
+  // if not found - 404 and return empty body
   // error
   // 400 - and return empty body back
   Todo.findOne({
@@ -101,14 +101,12 @@ app.delete('/todos/:id', authenticate, (req, res) => {
   // if not - 404 and return empty body
   // error
   // 400 - and return empty body back
-  console.log(id);
-  console.log(req.user._id);
   Todo.findOneAndRemove({
       _id: id,
       creator: req.user._id
     })
     .then(todo => {
-      console.log('found:'+todo);
+      console.log('found:' + todo);
       if (!todo)
         return res.status(404).send();
       res.status(200).send({
@@ -121,7 +119,7 @@ app.delete('/todos/:id', authenticate, (req, res) => {
 });
 
 // update by id
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   const id = req.params.id;
   const body = _.pick(req.body, ['text', 'completed']);
   console.log(body);
@@ -135,7 +133,10 @@ app.patch('/todos/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {
+  Todo.findOneAndUpdate({
+    _id: id,
+    creator: req.user._id
+  }, {
     $set: body
   }, {
     new: true
