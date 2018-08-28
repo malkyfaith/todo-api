@@ -8,23 +8,6 @@ const {
   User
 } = require('../models/user');
 const jwt = require('jsonwebtoken');
-
-const mock_Todos = [{
-  _id: new ObjectID(),
-  "text": "mock text 1"
-}, {
-  _id: new ObjectID(),
-  "text": "mock text 2",
-  completed: true,
-  completedAt: 333
-}];
-
-const populateTodos = (done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(mock_Todos)
-  }).then(() => done());
-}
-
 const id1 = new ObjectID();
 const id2 = new ObjectID();
 const user_mock = [{
@@ -45,6 +28,25 @@ const user_mock = [{
     password: '2test123'
   }
 ];
+
+const mock_Todos = [{
+  _id: new ObjectID(),
+  "text": "mock text 1",
+  creator: id1
+}, {
+  _id: new ObjectID(),
+  "text": "mock text 2",
+  completed: true,
+  completedAt: 333,
+  creator: id2
+}];
+
+
+const populateTodos = (done) => {
+  Todo.remove({}).then(() => {
+    return Todo.insertMany(mock_Todos)
+  }).then(() => done());
+}
 
 const populateUsers = (done) => {
   User.remove({}).then(() => {

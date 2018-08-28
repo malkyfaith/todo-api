@@ -20,8 +20,6 @@ const {
   populateUsers
 } = require('./seed');
 
-
-
 beforeEach(populateTodos);
 beforeEach(populateUsers);
 // POST /todos
@@ -30,6 +28,7 @@ describe('POST /todos', () => {
     var text = 'Test todo text';
     request(app)
       .post('/todos')
+      .set('x-auth', user_mock[0].tokens[0].token)
       .send({
         text
       })
@@ -53,6 +52,7 @@ describe('POST /todos', () => {
     var text = 'Test todo text';
     request(app)
       .post('/todos')
+      .set('x-auth', user_mock[0].tokens[0].token)
       .send({})
       .expect(400)
       .end((err, res) => {
@@ -70,9 +70,10 @@ describe('GET /todos', () => {
   it('should get todos', (done) => {
     request(app)
       .get('/todos')
+      .set('x-auth', user_mock[0].tokens[0].token)
       .expect(200)
       .expect(res => {
-        expect(res.body.todos.length).toBe(2);
+        expect(res.body.todos.length).toBe(1);
       })
       .end(done);
   });
@@ -246,5 +247,46 @@ describe('POST /users', () => {
       .end(done);
   });
 
-
 });
+
+// POST /users/login
+describe('POST /users/login', () => {
+  it('should be login with correct login', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: user_mock[1].email,
+        password: user_mock[1].password
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.header['x-auth']).toExist();
+      })
+      .end((err, res) => {
+        if (err) done(err);
+
+        User.findById(user_mock[1]._id).then(user => {
+          expect(user.email).toBe(user_mock[1].email);
+          expect(user.tokens[0]).toInclude({
+            access: 'auth',
+            token: res.header['x-auth']
+          });
+          done();
+        }).catch(e => done(e))
+      })
+  });
+
+  it('should invalid login', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: user_mock[1].email,
+        password: ''
+      })
+      .expect(400)
+      .expect(res => {
+        expect(res.header['x-auth']).toNotExist();
+      })
+      .end(done)
+  })
+})

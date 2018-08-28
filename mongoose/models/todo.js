@@ -1,4 +1,6 @@
-const {mongoose} = require('../db/mongoose');
+const {
+  mongoose
+} = require('../db/mongoose');
 
 const Todo = mongoose.model('Todo', {
   text: {
@@ -14,6 +16,10 @@ const Todo = mongoose.model('Todo', {
   completedAt: {
     type: Number, // unix timestamp
     default: null
+  },
+  creator: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
   }
 });
 

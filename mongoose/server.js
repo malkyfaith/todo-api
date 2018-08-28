@@ -35,9 +35,10 @@ const port = process.env.PORT;
 //middleware
 app.use(bodyParser.json());
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   let todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    creator: req.user._id
   });
 
   todo.save().then((doc) => {
@@ -46,8 +47,10 @@ app.post('/todos', (req, res) => {
   }, (err) => res.status(400).send(err));
 });
 
-app.get('/todos', (req, res) => {
-  Todo.find({}).then(todos => {
+app.get('/todos', authenticate, (req, res) => {
+  Todo.find({
+    creator: req.user._id
+  }).then(todos => {
     res.send({
       todos
     });
@@ -144,7 +147,6 @@ app.post('/users', (req, res) => {
   let user = new User(body);
 
   user.save().then((user) => {
-    // console.log('user:'+ JSON.stringify(user));
     return user.generateAuthToken();
   }).then(token => {
     res.header('x-auth', token).send(user);
@@ -165,7 +167,9 @@ app.post('/users/login', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
 
   User.findByCredentials(body.email, body.password).then(user => {
-    res.send(user);
+    return user.generateAuthToken().then(token => {
+      res.header('x-auth', token).send(user)
+    });
   }).catch(err => {
     res.status(400).send();
   });
