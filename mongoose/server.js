@@ -106,7 +106,6 @@ app.delete('/todos/:id', authenticate, (req, res) => {
       creator: req.user._id
     })
     .then(todo => {
-      console.log('found:' + todo);
       if (!todo)
         return res.status(404).send();
       res.status(200).send({

@@ -136,7 +136,6 @@ describe('DELETE /todos/:id', () => {
       });
   });
   it('should not delete the todo by another creator', (done) => {
-    console.log(JSON.stringify(mock_Todos));
     request(app)
       .delete(`/todos/${mock_Todos[0]._id.toHexString()}`)
       .set('x-auth', user_mock[1].tokens[0].token)
@@ -199,7 +198,15 @@ describe('PATCH /todos/:id', () => {
         text
       })
       .expect(404)
-      .end(done);
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(id).then(todo => {
+          expect(todo.text).toBe(mock_Todos[0].text);
+          done();
+        }).catch(e => done(e));
+      });
   });
   it('should clear completedAt when todo is not completed', (done) => {
     let id = mock_Todos[0]._id.toHexString();
