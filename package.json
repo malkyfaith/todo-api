@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node mongoose/server.js",
+    "start-dev": "SET \"NODE_ENV=development\" && node mongoose/server.js",
     "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && mocha mongoose/**/*.test.js --timeout 10000",
     "test-watch": "nodemon --exec \"npm test\""
   },
