@@ -1,5 +1,5 @@
 const config = require('./config/config');
-
+const morgan = require('morgan')
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
@@ -24,6 +24,12 @@ const port = process.env.PORT || 3000;
 
 //middleware
 app.use(bodyParser.json());
+if(app.get('env') === 'development') {
+  app.use(morgan('tiny'));
+  console.log('Morgan enabled');
+}
+
+
 
 app.post('/todos', authenticate, (req, res) => {
   let todo = new Todo({
